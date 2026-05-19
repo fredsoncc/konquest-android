@@ -10,6 +10,7 @@ import { BattleReportModal } from '@/components/BattleReportModal';
 import { useMultiplayer } from '@/lib/multiplayer-client';
 import type { GameState, TurnReport } from '@/lib/game-engine';
 import { addOrder, canSendFleet } from '@/lib/game-engine';
+import { StatusPanel } from '@/components/StatusPanel';
 
 export default function MultiplayerGameScreen() {
   const router = useRouter();
@@ -151,6 +152,9 @@ export default function MultiplayerGameScreen() {
           onPlanetPress={handlePlanetPress}
         />
       </View>
+
+      {/* Status Panel */}
+      <StatusPanel state={gameState} myPlayerId={myPlayerId} />
 
       {/* Painel de ordem */}
       {selectedPlanet && targetPlanet && isMyTurn && !turnEnded && (

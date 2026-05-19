@@ -16,6 +16,7 @@ import { GalaxyMap } from '@/components/GalaxyMap';
 import { FleetOrderPanel } from '@/components/FleetOrderPanel';
 import { BattleReportModal } from '@/components/BattleReportModal';
 import { NEUTRAL_ID, computeScores } from '@/lib/game-engine';
+import { StatusPanel } from '@/components/StatusPanel';
 import { ScreenContainer } from '@/components/screen-container';
 
 export default function GameScreen() {
@@ -136,18 +137,17 @@ export default function GameScreen() {
         </View>
 
         {/* Galaxy Map */}
-        <ScrollView
-          horizontal={false}
-          showsVerticalScrollIndicator={false}
-          style={styles.mapScroll}
-        >
+        <View style={styles.mapScroll}>
           <GalaxyMap
             state={state}
             selectedPlanet={selectedPlanet}
             targetPlanet={targetPlanet}
             onPlanetPress={handlePlanetPress}
           />
-        </ScrollView>
+        </View>
+
+        {/* Status Panel — placar de naves e planetas */}
+        <StatusPanel state={state} myPlayerId={state.currentPlayerId} />
 
         {/* Bottom Panel */}
         <View style={styles.bottomPanel}>

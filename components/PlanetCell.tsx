@@ -8,12 +8,13 @@ interface PlanetCellProps {
   isSelected: boolean;
   isTarget: boolean;
   cellSize: number;
+  cellMargin?: number;
   onPress: (name: string) => void;
   currentPlayerId: string;
   blindMap: boolean;
 }
 
-// Planet shape symbols (inspired by Konquest visual styles)
+// Símbolos de planetas (estilo Konquest)
 const PLANET_SYMBOLS = ['◉', '◎', '⊕', '⊙', '◈', '◆', '●', '◐', '◑'];
 
 export function PlanetCell({
@@ -22,6 +23,7 @@ export function PlanetCell({
   isSelected,
   isTarget,
   cellSize,
+  cellMargin = 2,
   onPress,
   currentPlayerId,
   blindMap,
@@ -38,6 +40,17 @@ export function PlanetCell({
     ? '#ef5350'
     : playerColor;
 
+  const bgColor = isSelected
+    ? `${playerColor}44`
+    : isTarget
+    ? '#ef535033'
+    : `${playerColor}18`;
+
+  // Tamanhos proporcionais ao cellSize
+  const symbolSize = Math.round(cellSize * 0.42);
+  const nameFontSize = Math.max(9, Math.round(cellSize * 0.18));
+  const shipsFontSize = Math.max(10, Math.round(cellSize * 0.22));
+
   return (
     <Pressable
       onPress={() => onPress(planet.name)}
@@ -46,48 +59,62 @@ export function PlanetCell({
         {
           width: cellSize,
           height: cellSize,
+          margin: cellMargin,
           borderColor,
-          borderWidth: isSelected || isTarget ? 2 : 1.5,
-          backgroundColor: isSelected
-            ? `${playerColor}33`
-            : isTarget
-            ? '#ef535022'
-            : '#0d1b2a',
+          borderWidth: isSelected || isTarget ? 2.5 : 1.5,
+          backgroundColor: bgColor,
+          borderRadius: Math.round(cellSize * 0.14),
         },
       ]}
     >
-      {/* Planet symbol */}
+      {/* Planeta símbolo — centro */}
       <Text
-        style={[
-          styles.symbol,
-          { color: playerColor, fontSize: cellSize * 0.38 },
-        ]}
+        style={[styles.symbol, { color: playerColor, fontSize: symbolSize }]}
+        numberOfLines={1}
       >
         {symbol}
       </Text>
 
-      {/* Planet name */}
+      {/* Nome do planeta — canto superior esquerdo */}
       <Text
-        style={[
-          styles.name,
-          { color: '#e0e0e0', fontSize: cellSize * 0.22 },
-        ]}
+        style={[styles.name, { color: '#cfd8dc', fontSize: nameFontSize }]}
         numberOfLines={1}
       >
         {planet.name}
       </Text>
 
-      {/* Ship count */}
+      {/* Quantidade de naves — canto inferior direito */}
       {showInfo && (
-        <Text
+        <View style={styles.shipsContainer}>
+          <Text
+            style={[styles.ships, { color: isOwned ? '#ffd54f' : '#90a4ae', fontSize: shipsFontSize }]}
+            numberOfLines={1}
+          >
+            {planet.ships}
+          </Text>
+        </View>
+      )}
+
+      {/* Indicador de produção — canto inferior esquerdo (só planetas do jogador) */}
+      {isOwned && (
+        <View style={styles.prodContainer}>
+          <Text style={[styles.prod, { fontSize: Math.max(8, nameFontSize - 1) }]}>
+            +{planet.production}
+          </Text>
+        </View>
+      )}
+
+      {/* Borda de seleção pulsante */}
+      {(isSelected || isTarget) && (
+        <View
           style={[
-            styles.ships,
-            { color: '#ffd54f', fontSize: cellSize * 0.2 },
+            styles.selectionGlow,
+            {
+              borderColor,
+              borderRadius: Math.round(cellSize * 0.14) + 3,
+            },
           ]}
-          numberOfLines={1}
-        >
-          {planet.ships}
-        </Text>
+        />
       )}
     </Pressable>
   );
@@ -95,26 +122,44 @@ export function PlanetCell({
 
 const styles = StyleSheet.create({
   cell: {
-    borderRadius: 6,
     alignItems: 'center',
     justifyContent: 'center',
-    margin: 1,
-    overflow: 'hidden',
+    overflow: 'visible',
   },
   symbol: {
     fontWeight: 'bold',
-    lineHeight: undefined,
   },
   name: {
     position: 'absolute',
-    top: 2,
-    left: 3,
-    fontWeight: 'bold',
+    top: 3,
+    left: 4,
+    fontWeight: '700',
+    letterSpacing: 0.5,
+  },
+  shipsContainer: {
+    position: 'absolute',
+    bottom: 3,
+    right: 4,
   },
   ships: {
+    fontWeight: '900',
+  },
+  prodContainer: {
     position: 'absolute',
-    bottom: 2,
-    right: 3,
-    fontWeight: 'bold',
+    bottom: 3,
+    left: 4,
+  },
+  prod: {
+    color: '#66bb6a',
+    fontWeight: '700',
+  },
+  selectionGlow: {
+    position: 'absolute',
+    top: -3,
+    left: -3,
+    right: -3,
+    bottom: -3,
+    borderWidth: 1.5,
+    opacity: 0.5,
   },
 });

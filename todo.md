@@ -19,3 +19,6 @@
 - [x] Gerar logo e ícone do app
 - [x] Configurar app.config.ts com nome e logo
 - [x] Salvar checkpoint e disponibilizar APK
+- [x] Aumentar tamanho dos planetas no mapa (mapa scrollável horizontal+vertical)
+- [x] Painel de status com naves/soldados por jogador
+- [x] Painel de status também na tela multiplayer
