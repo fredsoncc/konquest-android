@@ -20,3 +20,4 @@ yarn-error.*
 *.pem
 .manus-logs/
 .project-config.json
+.project-config.json
