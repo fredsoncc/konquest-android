@@ -1,0 +1,21 @@
+# Konquest Android — TODO
+
+- [x] Motor de jogo: tipos e interfaces (Planet, Fleet, Player, GameState)
+- [x] Motor de jogo: geração aleatória de mapa
+- [x] Motor de jogo: lógica de combate (ataque/defesa com kill percentage)
+- [x] Motor de jogo: produção de naves por turno
+- [x] Motor de jogo: movimentação de frotas (chegada por distância)
+- [x] Motor de jogo: detecção de vencedor
+- [x] Motor de jogo: IA básica para jogadores computador
+- [x] Tela inicial (HomeScreen)
+- [x] Tela de configuração de novo jogo (NewGameScreen)
+- [x] Tela principal do jogo com mapa galáctico (GameScreen)
+- [x] Componente de planeta interativo (PlanetCell)
+- [x] Painel de ordens de ataque (FleetOrderPanel)
+- [x] Relatório de batalha por turno (BattleReportModal)
+- [ ] Tela de placar final (ScoreScreen)
+- [x] Tela de ajuda/regras (HelpScreen)
+- [x] Tema visual espacial (cores, fontes)
+- [x] Gerar logo e ícone do app
+- [x] Configurar app.config.ts com nome e logo
+- [x] Salvar checkpoint e disponibilizar APK
