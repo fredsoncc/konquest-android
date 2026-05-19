@@ -1,0 +1,71 @@
+name: Build APK (Android)
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:   # permite acionar manualmente pelo GitHub
+
+jobs:
+  build:
+    name: Build Android APK
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 🛎 Checkout código
+        uses: actions/checkout@v4
+
+      - name: 🟢 Configurar Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: 📦 Instalar pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - name: 📥 Instalar dependências
+        run: pnpm install --frozen-lockfile
+
+      - name: 🔧 Instalar EAS CLI
+        run: npm install -g eas-cli
+
+      - name: 🏗️ Build APK com EAS
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+        run: |
+          eas build \
+            --platform android \
+            --profile preview \
+            --non-interactive \
+            --output ./konquest-android.apk
+
+      - name: 📤 Upload APK como artefato
+        uses: actions/upload-artifact@v4
+        with:
+          name: konquest-android-apk
+          path: "*.apk"
+          retention-days: 30
+
+      - name: 🏷️ Criar Release automático
+        uses: softprops/action-gh-release@v2
+        if: github.ref == 'refs/heads/main'
+        with:
+          tag_name: "v${{ github.run_number }}"
+          name: "Konquest Android v${{ github.run_number }}"
+          body: |
+            ## Konquest Android — Build automático
+
+            APK gerado automaticamente a partir do commit `${{ github.sha }}`.
+
+            ### Como instalar
+            1. Baixe o arquivo `konquest-android.apk` abaixo
+            2. Transfira para o seu Android
+            3. Habilite **Fontes desconhecidas** nas configurações e instale
+          files: "*.apk"
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

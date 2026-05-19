@@ -1,0 +1,21 @@
+{
+  "expo": {
+    "name": "Konquest",
+    "slug": "conquest_android_port",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/images/icon.png",
+    "userInterfaceStyle": "dark",
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/images/android-icon-foreground.png",
+        "backgroundColor": "#0a0a1a"
+      },
+      "package": "space.manus.konquest.android"
+    },
+    "plugins": [
+      "expo-router",
+      "expo-build-properties"
+    ]
+  }
+}
