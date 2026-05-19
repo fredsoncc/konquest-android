@@ -54,7 +54,11 @@ export interface MultiplayerActions {
 // ─── WebSocket URL ────────────────────────────────────────────────────────────
 
 function getWsUrl(): string {
-  const apiBase = process.env.EXPO_PUBLIC_API_BASE_URL ?? 'http://localhost:3000';
+  // Em produção (APK), aponta para o servidor publicado.
+  // O usuário pode sobrescrever via EXPO_PUBLIC_API_BASE_URL.
+  const apiBase =
+    process.env.EXPO_PUBLIC_API_BASE_URL ??
+    'https://conquestapp-ryo87qvt.manus.space';
   const wsBase = apiBase.replace(/^http/, 'ws');
   return `${wsBase}/ws/multiplayer`;
 }
@@ -91,13 +95,23 @@ export function useMultiplayer(
   }, []);
 
   const connect = useCallback((onOpen: () => void) => {
-    if (wsRef.current) wsRef.current.close();
+    try {
+      if (wsRef.current) wsRef.current.close();
+    } catch {}
     updateState({ phase: 'connecting', error: null });
 
-    const ws = new WebSocket(getWsUrl());
+    let ws: WebSocket;
+    try {
+      ws = new WebSocket(getWsUrl());
+    } catch (err: any) {
+      updateState({ phase: 'idle', error: 'Não foi possível iniciar a conexão: ' + (err?.message ?? 'erro desconhecido') });
+      return;
+    }
     wsRef.current = ws;
 
-    ws.onopen = () => onOpen();
+    ws.onopen = () => {
+      try { onOpen(); } catch (e) { console.error('onOpen error', e); }
+    };
 
     ws.onmessage = (event) => {
       let msg: any;

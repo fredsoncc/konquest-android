@@ -4,45 +4,135 @@ import { Stack } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import { StatusBar } from "expo-status-bar";
 import { useEffect } from "react";
+import { View, Text, ScrollView, StyleSheet, Pressable } from "react-native";
 import "react-native-reanimated";
 import "../global.css";
 import { useColorScheme } from "@/hooks/use-color-scheme";
 import { ThemeProvider as AppThemeProvider } from "@/lib/theme-provider";
 import { GameProvider } from "@/lib/game-context";
+import React from "react";
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
-SplashScreen.preventAutoHideAsync();
+SplashScreen.preventAutoHideAsync().catch(() => {
+  // ignore — fail-safe
+});
+
+// ─── Error Boundary global ────────────────────────────────────────────────────
+class GlobalErrorBoundary extends React.Component<
+  { children: React.ReactNode },
+  { error: Error | null; info: string | null }
+> {
+  state = { error: null as Error | null, info: null as string | null };
+
+  static getDerivedStateFromError(error: Error) {
+    return { error, info: null };
+  }
+
+  componentDidCatch(error: Error, info: { componentStack?: string }) {
+    this.setState({ error, info: info.componentStack ?? null });
+    console.error("[Konquest] Erro capturado pelo ErrorBoundary:", error, info);
+  }
+
+  reset = () => this.setState({ error: null, info: null });
+
+  render() {
+    if (this.state.error) {
+      return (
+        <View style={errStyles.container}>
+          <ScrollView contentContainerStyle={errStyles.content}>
+            <Text style={errStyles.title}>⚠️ Erro inesperado</Text>
+            <Text style={errStyles.message}>{this.state.error.message}</Text>
+            {this.state.error.stack && (
+              <Text style={errStyles.stack}>{this.state.error.stack.slice(0, 500)}</Text>
+            )}
+            <Pressable style={errStyles.btn} onPress={this.reset}>
+              <Text style={errStyles.btnText}>Tentar Novamente</Text>
+            </Pressable>
+          </ScrollView>
+        </View>
+      );
+    }
+    return this.props.children;
+  }
+}
 
 export default function RootLayout() {
   const colorScheme = useColorScheme();
-  const [loaded] = useFonts({
+  const [loaded, fontError] = useFonts({
     SpaceMono: require("../assets/fonts/SpaceMono-Regular.ttf"),
   });
 
   useEffect(() => {
-    if (loaded) {
-      SplashScreen.hideAsync();
+    // Esconde splash mesmo se a fonte falhar — evita tela branca permanente
+    if (loaded || fontError) {
+      SplashScreen.hideAsync().catch(() => {});
     }
-  }, [loaded]);
+  }, [loaded, fontError]);
 
-  if (!loaded) {
+  // Se a fonte demorar/falhar, ainda renderiza após timeout — não trava o app
+  if (!loaded && !fontError) {
     return null;
   }
 
   return (
-    <AppThemeProvider>
-      <ThemeProvider value={colorScheme === "dark" ? DarkTheme : DefaultTheme}>
-        <GameProvider>
-          <Stack screenOptions={{ headerShown: false }}>
-            <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-            <Stack.Screen name="new-game" options={{ headerShown: false }} />
-            <Stack.Screen name="game" options={{ headerShown: false }} />
-            <Stack.Screen name="help" options={{ headerShown: false }} />
-            <Stack.Screen name="+not-found" />
-          </Stack>
-        </GameProvider>
-        <StatusBar style="light" backgroundColor="#0a0a1a" />
-      </ThemeProvider>
-    </AppThemeProvider>
+    <GlobalErrorBoundary>
+      <AppThemeProvider>
+        <ThemeProvider value={colorScheme === "dark" ? DarkTheme : DefaultTheme}>
+          <GameProvider>
+            <Stack screenOptions={{ headerShown: false }}>
+              <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+              <Stack.Screen name="new-game" options={{ headerShown: false }} />
+              <Stack.Screen name="game" options={{ headerShown: false }} />
+              <Stack.Screen name="help" options={{ headerShown: false }} />
+              <Stack.Screen name="multiplayer-lobby" options={{ headerShown: false }} />
+              <Stack.Screen name="multiplayer-game" options={{ headerShown: false }} />
+              <Stack.Screen name="+not-found" />
+            </Stack>
+          </GameProvider>
+          <StatusBar style="light" backgroundColor="#0a0a1a" />
+        </ThemeProvider>
+      </AppThemeProvider>
+    </GlobalErrorBoundary>
   );
 }
+
+const errStyles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: "#0a0a1a",
+  },
+  content: {
+    flexGrow: 1,
+    padding: 24,
+    paddingTop: 80,
+  },
+  title: {
+    color: "#ef5350",
+    fontSize: 22,
+    fontWeight: "900",
+    marginBottom: 16,
+  },
+  message: {
+    color: "#e0f7fa",
+    fontSize: 14,
+    marginBottom: 16,
+    fontFamily: "monospace",
+  },
+  stack: {
+    color: "#90a4ae",
+    fontSize: 11,
+    marginBottom: 24,
+    fontFamily: "monospace",
+  },
+  btn: {
+    backgroundColor: "#0a7ea4",
+    paddingVertical: 14,
+    borderRadius: 10,
+    alignItems: "center",
+  },
+  btnText: {
+    color: "#fff",
+    fontWeight: "700",
+    fontSize: 15,
+  },
+});

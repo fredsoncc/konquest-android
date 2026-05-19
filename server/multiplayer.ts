@@ -26,7 +26,14 @@
  *   { type: 'pong' }
  */
 
-import { WebSocketServer, WebSocket } from 'ws';
+// `ws` é um pacote CommonJS — importar named exports diretamente do ESM falha
+// no runtime do Cloud Run com "Named export 'WebSocket' not found".
+// Solução: importar tudo (WSPkg) e desestruturar manualmente.
+import WSPkg from 'ws';
+import type * as WSTypes from 'ws';
+const WebSocketServer = (WSPkg as any).WebSocketServer ?? (WSPkg as any).Server;
+const WebSocket = (WSPkg as any).WebSocket ?? WSPkg;
+type WebSocket = WSTypes.WebSocket;
 import type { Server } from 'http';
 import {
   createGame,
@@ -288,8 +295,8 @@ function handleMessage(ws: WebSocket, raw: string) {
 export function registerMultiplayer(httpServer: Server) {
   const wss = new WebSocketServer({ server: httpServer, path: '/ws/multiplayer' });
 
-  wss.on('connection', (ws) => {
-    ws.on('message', (data) => handleMessage(ws, data.toString()));
+  wss.on('connection', (ws: WebSocket) => {
+    ws.on('message', (data: Buffer | string) => handleMessage(ws, data.toString()));
 
     ws.on('close', () => {
       const roomCode = socketToRoom.get(ws);

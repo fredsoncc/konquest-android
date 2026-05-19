@@ -22,3 +22,5 @@
 - [x] Aumentar tamanho dos planetas no mapa (mapa scrollável horizontal+vertical)
 - [x] Painel de status com naves/soldados por jogador
 - [x] Painel de status também na tela multiplayer
+- [x] Corrigir crash do APK em Motorola G73 e Poco X6 Pro (newArchEnabled, error boundary, fontes resilientes)
+- [x] Corrigir import do ws (CommonJS named exports)
