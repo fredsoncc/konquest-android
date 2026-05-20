@@ -121,7 +121,8 @@ pnpm qr
 | Data/hora | Agente | Status | Tarefa | Arquivos tocados | Resultado / próximo passo |
 |---|---|---|---|---|---|
 | 2026-05-19 GMT-3 | Manus | ✅ Concluído | Criar arquivo raiz de coordenação para agentes paralelos | `AGENTS.md` | Documentado estado do repositório, comandos verificados, pendências e protocolo de colaboração. |
-| 2026-05-20 ~01:00 GMT-3 | Manus | ✅ Concluído | Corrigir crash `useThemeContext must be used within ThemeProvider` em APKs Android | `lib/theme-provider.tsx`, `app/_layout.tsx`, `app/(tabs)/index.tsx`, `package.json` | ThemeContext agora usa singleton `globalThis`. `useFonts` movido para `InnerLayout`. Botão Multiplayer adicionado à tela inicial. `@types/ws` instalado. `pnpm check` e `pnpm test` passam. Próximo passo: validar APK em dispositivo real e implementar tela de placar final. |
+| 2026-05-20 ~01:00 GMT-3 | Manus | ✅ Concluído | Corrigir crash `useThemeContext must be used within ThemeProvider` em APKs Android | `lib/theme-provider.tsx`, `app/_layout.tsx`, `app/(tabs)/index.tsx`, `package.json` | ThemeContext agora usa singleton `globalThis`. `useFonts` movido para `InnerLayout`. Botão Multiplayer adicionado à tela inicial. `@types/ws` instalado. `pnpm check` e `pnpm test` passam. |
+| 2026-05-20 ~02:00 GMT-3 | Manus | ✅ Concluído | Corrigir crash do APK (Node.js import no config) e alinhar bundleId/scheme | `app.config.ts`, `constants/oauth.ts` | Removido import de `load-env.js` (Node.js modules) do config, corrigido bundleId/scheme no `oauth.ts` para evitar falhas de inicialização do Linking. versionCode incrementado para 4. |
 
 ## Notas para futuros agentes
 

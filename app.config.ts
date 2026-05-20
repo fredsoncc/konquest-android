@@ -1,5 +1,5 @@
 // Load environment variables with proper priority (system > .env)
-import "./scripts/load-env.js";
+// import "./scripts/load-env.js";
 import type { ExpoConfig } from "expo/config";
 
 // Bundle ID format: space.manus.<project_name_dots>.<timestamp>
@@ -64,7 +64,7 @@ const config: ExpoConfig = {
     edgeToEdgeEnabled: true,
     predictiveBackGestureEnabled: false,
     package: env.androidPackage,
-    versionCode: 2,
+    versionCode: 4,
     permissions: ["POST_NOTIFICATIONS"],
     intentFilters: [
       {
