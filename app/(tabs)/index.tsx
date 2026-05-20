@@ -4,7 +4,7 @@ import {
   Text,
   Pressable,
   StyleSheet,
-  ImageBackground,
+  ScrollView,
 } from 'react-native';
 import { router } from 'expo-router';
 import { ScreenContainer } from '@/components/screen-container';
@@ -42,61 +42,76 @@ function StarField() {
 
 export default function HomeScreen() {
   return (
-    <ScreenContainer containerClassName="bg-[#0a0a1a]" edges={['top', 'left', 'right']}>
-      <View style={styles.container}>
+    <ScreenContainer containerClassName="bg-[#0a0a1a]" edges={['top', 'left', 'right', 'bottom']}>
+      <View style={styles.outer}>
         <StarField />
+        <ScrollView
+          contentContainerStyle={styles.scrollContent}
+          showsVerticalScrollIndicator={false}
+          bounces={false}
+        >
+          {/* Logo / Title */}
+          <View style={styles.heroSection}>
+            <Text style={styles.logoSymbol}>◉</Text>
+            <Text style={styles.title}>KONQUEST</Text>
+            <Text style={styles.subtitle}>Conquista Galáctica</Text>
+            <View style={styles.divider} />
+            <Text style={styles.tagline}>
+              Expanda seu império interestelar.{'\n'}Esmague seus rivais.
+            </Text>
+          </View>
 
-        {/* Logo / Title */}
-        <View style={styles.heroSection}>
-          <Text style={styles.logoSymbol}>◉</Text>
-          <Text style={styles.title}>KONQUEST</Text>
-          <Text style={styles.subtitle}>Conquista Galáctica</Text>
-          <View style={styles.divider} />
-          <Text style={styles.tagline}>
-            Expanda seu império interestelar.{'\n'}Esmague seus rivais.
+          {/* Buttons */}
+          <View style={styles.buttonsSection}>
+            <Pressable
+              style={({ pressed }) => [styles.primaryBtn, pressed && styles.btnPressed]}
+              onPress={() => router.push('/new-game')}
+            >
+              <Text style={styles.primaryBtnText}>🚀  Novo Jogo</Text>
+            </Pressable>
+
+            <Pressable
+              style={({ pressed }) => [styles.multiBtn, pressed && styles.btnPressed]}
+              onPress={() => router.push('/multiplayer-lobby')}
+            >
+              <Text style={styles.multiBtnText}>🌐  Multiplayer</Text>
+              <Text style={styles.multiBtnSub}>Wi-Fi · Internet</Text>
+            </Pressable>
+
+            <Pressable
+              style={({ pressed }) => [styles.secondaryBtn, pressed && styles.btnPressed]}
+              onPress={() => router.push('/help')}
+            >
+              <Text style={styles.secondaryBtnText}>📖  Como Jogar</Text>
+            </Pressable>
+          </View>
+
+          {/* Footer */}
+          <Text style={styles.footer}>
+            Baseado em Konquest — KDE Games{'\n'}
+            GPL-2.0+ · Porte React Native
           </Text>
-        </View>
-
-        {/* Buttons */}
-        <View style={styles.buttonsSection}>
-          <Pressable
-            style={({ pressed }) => [styles.primaryBtn, pressed && styles.btnPressed]}
-            onPress={() => router.push('/new-game')}
-          >
-            <Text style={styles.primaryBtnText}>🚀  Novo Jogo</Text>
-          </Pressable>
-
-          <Pressable
-            style={({ pressed }) => [styles.secondaryBtn, pressed && styles.btnPressed]}
-            onPress={() => router.push('/help')}
-          >
-            <Text style={styles.secondaryBtnText}>📖  Como Jogar</Text>
-          </Pressable>
-        </View>
-
-        {/* Footer */}
-        <Text style={styles.footer}>
-          Baseado em Konquest — KDE Games{'\n'}
-          GPL-2.0+ · Porte React Native
-        </Text>
+        </ScrollView>
       </View>
     </ScreenContainer>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
+  outer: {
     flex: 1,
+    backgroundColor: '#0a0a1a',
+  },
+  scrollContent: {
+    flexGrow: 1,
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingVertical: 40,
     paddingHorizontal: 24,
-    backgroundColor: '#0a0a1a',
   },
   heroSection: {
     alignItems: 'center',
-    flex: 1,
-    justifyContent: 'center',
+    paddingVertical: 20,
   },
   logoSymbol: {
     fontSize: 72,
@@ -151,6 +166,26 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     fontSize: 18,
     letterSpacing: 1,
+  },
+  multiBtn: {
+    backgroundColor: '#1a237e',
+    borderWidth: 1.5,
+    borderColor: '#7986cb',
+    borderRadius: 14,
+    paddingVertical: 16,
+    alignItems: 'center',
+  },
+  multiBtnText: {
+    color: '#c5cae9',
+    fontWeight: 'bold',
+    fontSize: 17,
+    letterSpacing: 1,
+  },
+  multiBtnSub: {
+    color: '#7986cb',
+    fontSize: 11,
+    marginTop: 2,
+    letterSpacing: 2,
   },
   secondaryBtn: {
     borderWidth: 1.5,

@@ -7,14 +7,12 @@ import React, { useEffect } from "react";
 import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import "react-native-reanimated";
 import "../global.css";
-import { useColorScheme } from "@/hooks/use-color-scheme";
 import { ThemeProvider as AppThemeProvider } from "@/lib/theme-provider";
+import { useColorScheme } from "@/hooks/use-color-scheme";
 import { GameProvider } from "@/lib/game-context";
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
-SplashScreen.preventAutoHideAsync().catch(() => {
-  // ignore — fail-safe
-});
+SplashScreen.preventAutoHideAsync().catch(() => {});
 
 // ─── Error Boundary global ────────────────────────────────────────────────────
 class GlobalErrorBoundary extends React.Component<
@@ -28,7 +26,7 @@ class GlobalErrorBoundary extends React.Component<
   }
 
   componentDidCatch(error: Error, info: { componentStack?: string }) {
-    console.error("[Konquest] Erro capturado pelo ErrorBoundary:", error, info);
+    console.error("[Konquest] Erro:", error.message, info?.componentStack?.slice(0, 300));
   }
 
   reset = () => this.setState({ error: null });
@@ -54,9 +52,27 @@ class GlobalErrorBoundary extends React.Component<
   }
 }
 
-// ─── Inner layout (depende de ThemeProvider) ─────────────────────────────────
+// ─── Inner layout — DEVE estar DENTRO do AppThemeProvider ────────────────────
 function InnerLayout() {
+  // useFonts aqui dentro garante que está APÓS o ThemeProvider na árvore
+  const [fontsLoaded, fontError] = useFonts({
+    SpaceMono: require("../assets/fonts/SpaceMono-Regular.ttf"),
+  });
+
+  // useColorScheme chama useThemeContext — só funciona dentro do ThemeProvider
   const colorScheme = useColorScheme();
+
+  useEffect(() => {
+    // Esconde splash quando fontes carregam (ou falham) — nunca trava
+    if (fontsLoaded || fontError) {
+      SplashScreen.hideAsync().catch(() => {});
+    }
+  }, [fontsLoaded, fontError]);
+
+  // Aguarda fontes sem travar — se demorar, renderiza mesmo assim
+  if (!fontsLoaded && !fontError) {
+    return null;
+  }
 
   return (
     <NavThemeProvider value={colorScheme === "dark" ? DarkTheme : DefaultTheme}>
@@ -76,24 +92,8 @@ function InnerLayout() {
   );
 }
 
-// ─── Root layout ──────────────────────────────────────────────────────────────
+// ─── Root layout — apenas providers que NÃO dependem de outros contextos ──────
 export default function RootLayout() {
-  const [loaded, fontError] = useFonts({
-    SpaceMono: require("../assets/fonts/SpaceMono-Regular.ttf"),
-  });
-
-  useEffect(() => {
-    // Esconde splash mesmo se a fonte falhar — evita tela branca permanente
-    if (loaded || fontError) {
-      SplashScreen.hideAsync().catch(() => {});
-    }
-  }, [loaded, fontError]);
-
-  // Se a fonte demorar/falhar, ainda renderiza após timeout — não trava o app
-  if (!loaded && !fontError) {
-    return null;
-  }
-
   return (
     <GlobalErrorBoundary>
       <AppThemeProvider>
@@ -104,42 +104,11 @@ export default function RootLayout() {
 }
 
 const errStyles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#0a0a1a",
-  },
-  content: {
-    flexGrow: 1,
-    padding: 24,
-    paddingTop: 80,
-  },
-  title: {
-    color: "#ef5350",
-    fontSize: 22,
-    fontWeight: "900",
-    marginBottom: 16,
-  },
-  message: {
-    color: "#e0f7fa",
-    fontSize: 14,
-    marginBottom: 16,
-    fontFamily: "monospace",
-  },
-  stack: {
-    color: "#90a4ae",
-    fontSize: 11,
-    marginBottom: 24,
-    fontFamily: "monospace",
-  },
-  btn: {
-    backgroundColor: "#0a7ea4",
-    paddingVertical: 14,
-    borderRadius: 10,
-    alignItems: "center",
-  },
-  btnText: {
-    color: "#fff",
-    fontWeight: "700",
-    fontSize: 15,
-  },
+  container: { flex: 1, backgroundColor: "#0a0a1a" },
+  content: { flexGrow: 1, padding: 24, paddingTop: 80 },
+  title: { color: "#ef5350", fontSize: 22, fontWeight: "900", marginBottom: 16 },
+  message: { color: "#e0f7fa", fontSize: 14, marginBottom: 16, fontFamily: "monospace" },
+  stack: { color: "#90a4ae", fontSize: 11, marginBottom: 24, fontFamily: "monospace" },
+  btn: { backgroundColor: "#0a7ea4", paddingVertical: 14, borderRadius: 10, alignItems: "center" },
+  btnText: { color: "#fff", fontWeight: "700", fontSize: 15 },
 });

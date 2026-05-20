@@ -9,11 +9,19 @@ type ThemeContextValue = {
   setColorScheme: (scheme: ColorScheme) => void;
 };
 
-const ThemeContext = createContext<ThemeContextValue | null>(null);
+// ─── Singleton global ─────────────────────────────────────────────────────────
+// Usar globalThis garante que mesmo que o Metro resolva este módulo duas vezes
+// (duplicação de bundle em builds Android), o contexto é sempre o mesmo objeto.
+// Isso evita o erro "useThemeContext must be used within ThemeProvider" em APKs.
+const g = globalThis as any;
+if (!g.__KONQUEST_THEME_CTX__) {
+  g.__KONQUEST_THEME_CTX__ = createContext<ThemeContextValue | null>(null);
+}
+const ThemeContext: React.Context<ThemeContextValue | null> = g.__KONQUEST_THEME_CTX__;
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const systemScheme = useSystemColorScheme() ?? "light";
-  const [colorScheme, setColorSchemeState] = useState<ColorScheme>(systemScheme);
+  const [colorScheme, setColorSchemeState] = useState<ColorScheme>(systemScheme as ColorScheme);
 
   const applyScheme = useCallback((scheme: ColorScheme) => {
     nativewindColorScheme.set(scheme);
@@ -29,10 +37,13 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     }
   }, []);
 
-  const setColorScheme = useCallback((scheme: ColorScheme) => {
-    setColorSchemeState(scheme);
-    applyScheme(scheme);
-  }, [applyScheme]);
+  const setColorScheme = useCallback(
+    (scheme: ColorScheme) => {
+      setColorSchemeState(scheme);
+      applyScheme(scheme);
+    },
+    [applyScheme],
+  );
 
   useEffect(() => {
     applyScheme(colorScheme);
@@ -61,6 +72,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     }),
     [colorScheme, setColorScheme],
   );
+
   return (
     <ThemeContext.Provider value={value}>
       <View style={[{ flex: 1 }, themeVariables]}>{children}</View>
