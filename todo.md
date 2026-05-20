@@ -24,3 +24,5 @@
 - [x] Painel de status também na tela multiplayer
 - [x] Corrigir crash do APK em Motorola G73 e Poco X6 Pro (newArchEnabled, error boundary, fontes resilientes)
 - [x] Corrigir import do ws (CommonJS named exports)
+- [x] Corrigir crash 'useThemeContext must be used within ThemeProvider' (separar wrapper)
+- [x] Corrigir import do ws no bundle gerado pelo esbuild

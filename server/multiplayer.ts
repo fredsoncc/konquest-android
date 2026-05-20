@@ -26,13 +26,14 @@
  *   { type: 'pong' }
  */
 
-// `ws` é um pacote CommonJS — importar named exports diretamente do ESM falha
-// no runtime do Cloud Run com "Named export 'WebSocket' not found".
-// Solução: importar tudo (WSPkg) e desestruturar manualmente.
-import WSPkg from 'ws';
+// `ws` é um pacote CommonJS — usar createRequire garante que o esbuild
+// não converta para named ESM imports (que quebram no runtime Node.js).
+import { createRequire } from 'module';
+const _require = createRequire(import.meta.url);
+const WSPkg = _require('ws');
+const WebSocketServer: any = WSPkg.WebSocketServer ?? WSPkg.Server;
+const WebSocket: any = WSPkg.WebSocket ?? WSPkg;
 import type * as WSTypes from 'ws';
-const WebSocketServer = (WSPkg as any).WebSocketServer ?? (WSPkg as any).Server;
-const WebSocket = (WSPkg as any).WebSocket ?? WSPkg;
 type WebSocket = WSTypes.WebSocket;
 import type { Server } from 'http';
 import {

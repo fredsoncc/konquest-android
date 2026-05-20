@@ -1,16 +1,15 @@
-import { DarkTheme, DefaultTheme, ThemeProvider } from "@react-navigation/native";
+import { DarkTheme, DefaultTheme, ThemeProvider as NavThemeProvider } from "@react-navigation/native";
 import { useFonts } from "expo-font";
 import { Stack } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import { StatusBar } from "expo-status-bar";
-import { useEffect } from "react";
-import { View, Text, ScrollView, StyleSheet, Pressable } from "react-native";
+import React, { useEffect } from "react";
+import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import "react-native-reanimated";
 import "../global.css";
 import { useColorScheme } from "@/hooks/use-color-scheme";
 import { ThemeProvider as AppThemeProvider } from "@/lib/theme-provider";
 import { GameProvider } from "@/lib/game-context";
-import React from "react";
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync().catch(() => {
@@ -20,20 +19,19 @@ SplashScreen.preventAutoHideAsync().catch(() => {
 // ─── Error Boundary global ────────────────────────────────────────────────────
 class GlobalErrorBoundary extends React.Component<
   { children: React.ReactNode },
-  { error: Error | null; info: string | null }
+  { error: Error | null }
 > {
-  state = { error: null as Error | null, info: null as string | null };
+  state = { error: null as Error | null };
 
   static getDerivedStateFromError(error: Error) {
-    return { error, info: null };
+    return { error };
   }
 
   componentDidCatch(error: Error, info: { componentStack?: string }) {
-    this.setState({ error, info: info.componentStack ?? null });
     console.error("[Konquest] Erro capturado pelo ErrorBoundary:", error, info);
   }
 
-  reset = () => this.setState({ error: null, info: null });
+  reset = () => this.setState({ error: null });
 
   render() {
     if (this.state.error) {
@@ -43,7 +41,7 @@ class GlobalErrorBoundary extends React.Component<
             <Text style={errStyles.title}>⚠️ Erro inesperado</Text>
             <Text style={errStyles.message}>{this.state.error.message}</Text>
             {this.state.error.stack && (
-              <Text style={errStyles.stack}>{this.state.error.stack.slice(0, 500)}</Text>
+              <Text style={errStyles.stack}>{this.state.error.stack.slice(0, 700)}</Text>
             )}
             <Pressable style={errStyles.btn} onPress={this.reset}>
               <Text style={errStyles.btnText}>Tentar Novamente</Text>
@@ -52,12 +50,34 @@ class GlobalErrorBoundary extends React.Component<
         </View>
       );
     }
-    return this.props.children;
+    return this.props.children as any;
   }
 }
 
-export default function RootLayout() {
+// ─── Inner layout (depende de ThemeProvider) ─────────────────────────────────
+function InnerLayout() {
   const colorScheme = useColorScheme();
+
+  return (
+    <NavThemeProvider value={colorScheme === "dark" ? DarkTheme : DefaultTheme}>
+      <GameProvider>
+        <Stack screenOptions={{ headerShown: false }}>
+          <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+          <Stack.Screen name="new-game" options={{ headerShown: false }} />
+          <Stack.Screen name="game" options={{ headerShown: false }} />
+          <Stack.Screen name="help" options={{ headerShown: false }} />
+          <Stack.Screen name="multiplayer-lobby" options={{ headerShown: false }} />
+          <Stack.Screen name="multiplayer-game" options={{ headerShown: false }} />
+          <Stack.Screen name="+not-found" />
+        </Stack>
+      </GameProvider>
+      <StatusBar style="light" backgroundColor="#0a0a1a" />
+    </NavThemeProvider>
+  );
+}
+
+// ─── Root layout ──────────────────────────────────────────────────────────────
+export default function RootLayout() {
   const [loaded, fontError] = useFonts({
     SpaceMono: require("../assets/fonts/SpaceMono-Regular.ttf"),
   });
@@ -77,20 +97,7 @@ export default function RootLayout() {
   return (
     <GlobalErrorBoundary>
       <AppThemeProvider>
-        <ThemeProvider value={colorScheme === "dark" ? DarkTheme : DefaultTheme}>
-          <GameProvider>
-            <Stack screenOptions={{ headerShown: false }}>
-              <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-              <Stack.Screen name="new-game" options={{ headerShown: false }} />
-              <Stack.Screen name="game" options={{ headerShown: false }} />
-              <Stack.Screen name="help" options={{ headerShown: false }} />
-              <Stack.Screen name="multiplayer-lobby" options={{ headerShown: false }} />
-              <Stack.Screen name="multiplayer-game" options={{ headerShown: false }} />
-              <Stack.Screen name="+not-found" />
-            </Stack>
-          </GameProvider>
-          <StatusBar style="light" backgroundColor="#0a0a1a" />
-        </ThemeProvider>
+        <InnerLayout />
       </AppThemeProvider>
     </GlobalErrorBoundary>
   );
