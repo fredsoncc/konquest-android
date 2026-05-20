@@ -1,13 +1,12 @@
-import { DarkTheme, DefaultTheme, ThemeProvider as NavThemeProvider } from "@react-navigation/native";
+import { DarkTheme, ThemeProvider as NavThemeProvider } from "@react-navigation/native";
 import { useFonts } from "expo-font";
 import { Stack } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import { StatusBar } from "expo-status-bar";
 import React, { useEffect } from "react";
-import { Pressable, ScrollView, StyleSheet, Text, View, useColorScheme as useRNColorScheme } from "react-native";
+import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import "react-native-reanimated";
 import "../global.css";
-import { ThemeProvider as AppThemeProvider } from "@/lib/theme-provider";
 import { GameProvider } from "@/lib/game-context";
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
@@ -19,17 +18,13 @@ class GlobalErrorBoundary extends React.Component<
   { error: Error | null }
 > {
   state = { error: null as Error | null };
-
   static getDerivedStateFromError(error: Error) {
     return { error };
   }
-
   componentDidCatch(error: Error, info: { componentStack?: string }) {
     console.error("[Konquest] Erro:", error.message, info?.componentStack?.slice(0, 300));
   }
-
   reset = () => this.setState({ error: null });
-
   render() {
     if (this.state.error) {
       return (
@@ -51,16 +46,12 @@ class GlobalErrorBoundary extends React.Component<
   }
 }
 
-// ─── Inner layout — DEVE estar DENTRO do AppThemeProvider ────────────────────
-function InnerLayout() {
+// ─── Root layout ──────────────────────────────────────────────────────────────
+// SEM ThemeProvider customizado — DarkTheme fixo do React Navigation
+export default function RootLayout() {
   const [fontsLoaded, fontError] = useFonts({
     SpaceMono: require("../assets/fonts/SpaceMono-Regular.ttf"),
   });
-
-  // Usar useColorScheme do React Native DIRETAMENTE — sem depender do ThemeContext
-  // Isso evita o erro "useThemeContext must be used within ThemeProvider"
-  const rnColorScheme = useRNColorScheme();
-  const isDark = rnColorScheme === "dark";
 
   useEffect(() => {
     if (fontsLoaded || fontError) {
@@ -73,30 +64,21 @@ function InnerLayout() {
   }
 
   return (
-    <NavThemeProvider value={isDark ? DarkTheme : DefaultTheme}>
-      <GameProvider>
-        <Stack screenOptions={{ headerShown: false }}>
-          <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-          <Stack.Screen name="new-game" options={{ headerShown: false }} />
-          <Stack.Screen name="game" options={{ headerShown: false }} />
-          <Stack.Screen name="help" options={{ headerShown: false }} />
-          <Stack.Screen name="multiplayer-lobby" options={{ headerShown: false }} />
-          <Stack.Screen name="multiplayer-game" options={{ headerShown: false }} />
-          <Stack.Screen name="+not-found" />
-        </Stack>
-      </GameProvider>
-      <StatusBar style="light" backgroundColor="#0a0a1a" />
-    </NavThemeProvider>
-  );
-}
-
-// ─── Root layout — apenas providers que NÃO dependem de outros contextos ──────
-export default function RootLayout() {
-  return (
     <GlobalErrorBoundary>
-      <AppThemeProvider>
-        <InnerLayout />
-      </AppThemeProvider>
+      <NavThemeProvider value={DarkTheme}>
+        <GameProvider>
+          <Stack screenOptions={{ headerShown: false }}>
+            <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+            <Stack.Screen name="new-game" options={{ headerShown: false }} />
+            <Stack.Screen name="game" options={{ headerShown: false }} />
+            <Stack.Screen name="help" options={{ headerShown: false }} />
+            <Stack.Screen name="multiplayer-lobby" options={{ headerShown: false }} />
+            <Stack.Screen name="multiplayer-game" options={{ headerShown: false }} />
+            <Stack.Screen name="+not-found" />
+          </Stack>
+        </GameProvider>
+        <StatusBar style="light" backgroundColor="#0a0a1a" />
+      </NavThemeProvider>
     </GlobalErrorBoundary>
   );
 }
