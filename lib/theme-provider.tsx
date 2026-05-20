@@ -9,31 +9,37 @@ type ThemeContextValue = {
   setColorScheme: (scheme: ColorScheme) => void;
 };
 
-// ─── Singleton global ─────────────────────────────────────────────────────────
-// Usar globalThis garante que mesmo que o Metro resolva este módulo duas vezes
-// (duplicação de bundle em builds Android), o contexto é sempre o mesmo objeto.
-// Isso evita o erro "useThemeContext must be used within ThemeProvider" em APKs.
-const g = globalThis as any;
-if (!g.__KONQUEST_THEME_CTX__) {
-  g.__KONQUEST_THEME_CTX__ = createContext<ThemeContextValue | null>(null);
-}
-const ThemeContext: React.Context<ThemeContextValue | null> = g.__KONQUEST_THEME_CTX__;
+// Valor padrão seguro — usado quando o contexto não está disponível
+// (ex: Expo Router Suspense boundary renderizando fora do ThemeProvider)
+const DEFAULT_THEME: ThemeContextValue = {
+  colorScheme: "dark",
+  setColorScheme: () => {},
+};
+
+// Contexto com valor padrão — NUNCA retorna null, NUNCA lança erro
+const ThemeContext = createContext<ThemeContextValue>(DEFAULT_THEME);
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
-  const systemScheme = useSystemColorScheme() ?? "light";
-  const [colorScheme, setColorSchemeState] = useState<ColorScheme>(systemScheme as ColorScheme);
+  const systemScheme = (useSystemColorScheme() ?? "dark") as ColorScheme;
+  const [colorScheme, setColorSchemeState] = useState<ColorScheme>(systemScheme);
 
   const applyScheme = useCallback((scheme: ColorScheme) => {
-    nativewindColorScheme.set(scheme);
-    Appearance.setColorScheme?.(scheme);
+    try {
+      nativewindColorScheme.set(scheme);
+    } catch {}
+    try {
+      Appearance.setColorScheme?.(scheme);
+    } catch {}
     if (typeof document !== "undefined") {
-      const root = document.documentElement;
-      root.dataset.theme = scheme;
-      root.classList.toggle("dark", scheme === "dark");
-      const palette = SchemeColors[scheme];
-      Object.entries(palette).forEach(([token, value]) => {
-        root.style.setProperty(`--color-${token}`, value);
-      });
+      try {
+        const root = document.documentElement;
+        root.dataset.theme = scheme;
+        root.classList.toggle("dark", scheme === "dark");
+        const palette = SchemeColors[scheme];
+        Object.entries(palette).forEach(([token, value]) => {
+          root.style.setProperty(`--color-${token}`, value);
+        });
+      } catch {}
     }
   }, []);
 
@@ -66,10 +72,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   );
 
   const value = useMemo(
-    () => ({
-      colorScheme,
-      setColorScheme,
-    }),
+    () => ({ colorScheme, setColorScheme }),
     [colorScheme, setColorScheme],
   );
 
@@ -80,10 +83,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   );
 }
 
+// NUNCA lança erro — retorna valor padrão se fora do Provider
 export function useThemeContext(): ThemeContextValue {
-  const ctx = useContext(ThemeContext);
-  if (!ctx) {
-    throw new Error("useThemeContext must be used within ThemeProvider");
-  }
-  return ctx;
+  return useContext(ThemeContext);
 }

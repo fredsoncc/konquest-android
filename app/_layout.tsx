@@ -4,11 +4,10 @@ import { Stack } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import { StatusBar } from "expo-status-bar";
 import React, { useEffect } from "react";
-import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { Pressable, ScrollView, StyleSheet, Text, View, useColorScheme as useRNColorScheme } from "react-native";
 import "react-native-reanimated";
 import "../global.css";
 import { ThemeProvider as AppThemeProvider } from "@/lib/theme-provider";
-import { useColorScheme } from "@/hooks/use-color-scheme";
 import { GameProvider } from "@/lib/game-context";
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
@@ -54,28 +53,27 @@ class GlobalErrorBoundary extends React.Component<
 
 // ─── Inner layout — DEVE estar DENTRO do AppThemeProvider ────────────────────
 function InnerLayout() {
-  // useFonts aqui dentro garante que está APÓS o ThemeProvider na árvore
   const [fontsLoaded, fontError] = useFonts({
     SpaceMono: require("../assets/fonts/SpaceMono-Regular.ttf"),
   });
 
-  // useColorScheme chama useThemeContext — só funciona dentro do ThemeProvider
-  const colorScheme = useColorScheme();
+  // Usar useColorScheme do React Native DIRETAMENTE — sem depender do ThemeContext
+  // Isso evita o erro "useThemeContext must be used within ThemeProvider"
+  const rnColorScheme = useRNColorScheme();
+  const isDark = rnColorScheme === "dark";
 
   useEffect(() => {
-    // Esconde splash quando fontes carregam (ou falham) — nunca trava
     if (fontsLoaded || fontError) {
       SplashScreen.hideAsync().catch(() => {});
     }
   }, [fontsLoaded, fontError]);
 
-  // Aguarda fontes sem travar — se demorar, renderiza mesmo assim
   if (!fontsLoaded && !fontError) {
     return null;
   }
 
   return (
-    <NavThemeProvider value={colorScheme === "dark" ? DarkTheme : DefaultTheme}>
+    <NavThemeProvider value={isDark ? DarkTheme : DefaultTheme}>
       <GameProvider>
         <Stack screenOptions={{ headerShown: false }}>
           <Stack.Screen name="(tabs)" options={{ headerShown: false }} />

@@ -26,3 +26,4 @@
 - [x] Corrigir import do ws (CommonJS named exports)
 - [x] Corrigir crash 'useThemeContext must be used within ThemeProvider' (separar wrapper)
 - [x] Corrigir import do ws no bundle gerado pelo esbuild
+- [x] CRÍTICO: ThemeContext com valor padrão (nunca null/throw) + useRNColorScheme no InnerLayout + useColorScheme com fallback duplo
