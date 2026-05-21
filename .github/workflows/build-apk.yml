@@ -1,71 +1,101 @@
-name: Build APK (Android)
+name: Build APK with EAS
 
 on:
   push:
     branches:
       - main
-  workflow_dispatch:   # permite acionar manualmente pelo GitHub
+      - develop
+  workflow_dispatch:
+    inputs:
+      release_draft:
+        description: 'Criar como rascunho (draft)'
+        required: false
+        default: 'false'
+        type: boolean
 
 jobs:
   build:
-    name: Build Android APK
     runs-on: ubuntu-latest
+    timeout-minutes: 60
+    permissions:
+      contents: write
 
     steps:
-      - name: 🛎 Checkout código
+      - name: 📦 Checkout code
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
-      - name: 🟢 Configurar Node.js
+      - name: 🔧 Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 22
-          cache: npm
+          node-version: '20'
+          cache: 'pnpm'
 
-      - name: 📦 Instalar pnpm
-        uses: pnpm/action-setup@v4
+      - name: 📥 Install pnpm
+        uses: pnpm/action-setup@v2
         with:
-          version: 9
+          version: '9.12.0'
 
-      - name: 📥 Instalar dependências
+      - name: 📚 Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: 🔧 Instalar EAS CLI
+      - name: ✅ Type check
+        run: pnpm check
+        continue-on-error: true
+
+      - name: 🚀 Setup EAS CLI
         run: npm install -g eas-cli
 
-      - name: 🏗️ Build APK com EAS
+      - name: 🏗️ Build APK with EAS
+        run: eas build --platform android --non-interactive --wait
         env:
           EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+
+      - name: 📥 Download build artifacts
         run: |
-          eas build \
-            --platform android \
-            --profile preview \
-            --non-interactive \
-            --output ./konquest-android.apk
+          mkdir -p ./build-artifacts
+          if [ -d "$HOME/.eas/builds" ]; then
+            find $HOME/.eas/builds -name "*.apk" -exec cp {} ./build-artifacts/ \; 2>/dev/null || true
+          fi
 
-      - name: 📤 Upload APK como artefato
-        uses: actions/upload-artifact@v4
+      - name: 📋 Generate changelog
+        id: changelog
+        run: |
+          {
+            echo "## 📱 Build Information"
+            echo ""
+            echo "- **Data**: $(date -u +'%Y-%m-%d %H:%M:%S UTC')"
+            echo "- **Commit**: [${{ github.sha }}](${{ github.server_url }}/${{ github.repository }}/commit/${{ github.sha }})"
+            echo "- **Branch**: ${{ github.ref }}"
+            echo "- **Author**: ${{ github.actor }}"
+            echo ""
+            echo "### 📝 Últimos commits"
+            git log --oneline -10
+          } >> CHANGELOG.md
+          cat CHANGELOG.md
+
+      - name: 🏷️ Create Release
+        if: success() && startsWith(github.ref, 'refs/heads/main')
+        uses: softprops/action-gh-release@v1
         with:
-          name: konquest-android-apk
-          path: "*.apk"
-          retention-days: 30
-
-      - name: 🏷️ Criar Release automático
-        uses: softprops/action-gh-release@v2
-        if: github.ref == 'refs/heads/main'
-        with:
-          tag_name: "v${{ github.run_number }}"
-          name: "Konquest Android v${{ github.run_number }}"
-          body: |
-            ## Konquest Android — Build automático
-
-            APK gerado automaticamente a partir do commit `${{ github.sha }}`.
-
-            ### Como instalar
-            1. Baixe o arquivo `konquest-android.apk` abaixo
-            2. Transfira para o seu Android
-            3. Habilite **Fontes desconhecidas** nas configurações e instale
-          files: "*.apk"
-          draft: false
-          prerelease: false
+          files: ./build-artifacts/*.apk
+          tag_name: 'build-${{ github.run_number }}'
+          release_name: 'APK Build #${{ github.run_number }}'
+          body_path: CHANGELOG.md
+          draft: ${{ github.event.inputs.release_draft == 'true' }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: ✨ Build Summary
+        if: always()
+        run: |
+          echo "## ✅ Build Pipeline Concluído"
+          echo ""
+          echo "| Campo | Valor |"
+          echo "|-------|-------|"
+          echo "| Run ID | ${{ github.run_id }} |"
+          echo "| Build # | ${{ github.run_number }} |"
+          echo "| Commit | ${{ github.sha }} |"
+          echo "| Branch | ${{ github.ref }} |"
+          echo "| Status | ${{ job.status }} |"
