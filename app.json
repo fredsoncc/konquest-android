@@ -16,6 +16,11 @@
     "plugins": [
       "expo-router",
       "expo-build-properties"
-    ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "36625ed5-cb1b-4356-b4e6-dc23ed15a220"
+      }
+    }
   }
 }
